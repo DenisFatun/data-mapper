@@ -3,6 +3,8 @@
 --- Created by norguhtar.
 --- DateTime: 29.01.19 10:13
 ---
+local schema = require('data-mapper.schema')
+local inspect = require('inspect')
 
 local relation = {}
 
@@ -59,20 +61,6 @@ function relation:new(obj)
     return obj
 end
 
-function relation:rebuid_prefix()
-    for _, link in pairs(self.sql.join.link) do
-        if self.entity:get_prefix() == link.table:get_prefix() then
-            link.table:set_prefix(link.table:get_prefix() .. '_0')
-        end
-        for _, entity in pairs(self.sql.join.link) do
-            if entity.table.table ~= link.table.table and entity.table:get_prefix() == link.table:get_prefix() then
-               link.table:set_prefix(link.table:get_prefix() .. '_0')
-            end
-        end
-    end
-
-end
-
 function relation:build_filter(entity)
     local filter = ''
 
@@ -109,19 +97,21 @@ function relation:build_sql(entity)
 
             local fields = {}
 
-            local prefix = entity:get_prefix()
 
-            for key, field in pairs(entity.fields) do
-                fields[#fields + 1] = prefix .. '.' .. key .. ' AS ' .. prefix .. '_'
-                if field.alias then
-                    fields[#fields] = fields[#fields] .. field.alias
-                else
-                    fields[#fields] = fields[#fields] .. key
+            for _, entity in pairs(self.entities) do
+                local prefix = entity:get_prefix()
+
+                for key, field in pairs(entity.fields) do
+                    fields[#fields + 1] = prefix .. '.' .. key .. ' AS ' .. prefix .. '_'
+                    if field.alias then
+                        fields[#fields] = fields[#fields] .. field.alias
+                    else
+                        fields[#fields] = fields[#fields] .. key
+                    end
                 end
             end
 
             if self.sql.join then
-                self:rebuid_prefix()
                 for _, value in pairs(self.sql.join.link) do
                     local table = value.table
                     if value.type == 'one' then
@@ -217,7 +207,9 @@ end
 
 function relation:select(entity)
 
+
     self.entity = entity or self.entity
+    self.entities = { self.entity }
     self.sql.type = 'SELECT'
     self.sql.join = { link = {} }
 
@@ -273,7 +265,12 @@ function relation:join(join_table, linkinfo)
 
     local entity = self.entity
     if entity then
-
+        print("got table", join_table)
+        local find_table =  schema:search(join_table)
+        if find_table then
+            print("find table" , find_table.table)
+            table.insert(self.entities, find_table)
+        end
         if type(join_table) == 'string' then
             join_table = { table = join_table }
         end
@@ -285,6 +282,8 @@ function relation:join(join_table, linkinfo)
         local link = join_link(self.entity, join_table, linkinfo.type, linkinfo.link)
         if link and not has_table(self.sql.join.link, link.table) then
             self.sql.join.link[#(self.sql.join.link)+1] = link
+        else
+            print("table ", inspect(join_table))
         end
     end
 

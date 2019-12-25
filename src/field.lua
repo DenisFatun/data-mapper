@@ -24,7 +24,6 @@ local function get_value(val_type, value)
             return value
         end
     elseif val_type == 'boolean' then
-        print(value)
         local bool_value
         if type(value) == 'boolean' then
             bool_value = tostring(value)

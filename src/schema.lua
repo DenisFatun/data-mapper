@@ -4,6 +4,7 @@
 --- DateTime: 19.09.2019 11:42
 ---
 
+local inspect = require('inspect')
 local schema = {
     tables = {}
 
@@ -13,16 +14,33 @@ setmetatable(schema, self)
 schema.__index = self
 
 function schema:search(table)
+    if type(table) == 'string' then
+        table = { table = table }
+    end
     for key, exist in pairs(self.tables) do
-        if key == table then
+        if exist.schema == table.schema and exist.table == table.table then
+            return exist
+        end
+        if exist.table == table.table and not table.schema then
             return exist
         end
     end
 end
 
 function schema:add(table)
+    local key
+    key = table:get_prefix()
     if not schema:search(table) then
-        local key = string.format("%s_%s", table.schema, table.table)
+        while self.tables[key] do
+            local index = string.gsub(table:get_prefix(),'%a','')
+            if index == '' then
+                index = 1
+            else
+                index = tonumber(index)+1
+            end
+            key = string.format("%s%d", table:get_prefix(true), index)
+            table:set_prefix(key)
+        end
         self.tables[key] = table
     end
 end
