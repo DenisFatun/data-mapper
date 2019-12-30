@@ -148,7 +148,7 @@ end
 function entity:delete(fields)
     local query = self.relation:delete():where(fields):build_sql()
     local res = self.db:query(query)
-    if next(res) then
+    if res and next(res) then
         return res
     end
 end

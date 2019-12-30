@@ -7,9 +7,9 @@
 local pgmoon, _ = pcall(require,"pgmoon")
 local inspect = require("inspect")
 
-local postgres = {}
+local _M = {}
 
-function postgres:new(obj)
+function _M:new(obj)
     obj = obj or {}
 
     if not pgmoon then
@@ -22,7 +22,7 @@ function postgres:new(obj)
                 host = config.host,
                 port = config.port,
                 database = config.database,
-                user = config.user,
+                user = config.username,
                 password = config.password
             })
     end
@@ -33,7 +33,7 @@ function postgres:new(obj)
 end
 
 
-function postgres:connect()
+function _M:connect()
     local db = self.db
 
     if db then
@@ -46,9 +46,9 @@ function postgres:connect()
     end
 end
 
-function postgres:query(sql)
+function _M:query(sql)
     local db = self.db
-    if postgres:connect() then
+    if _M:connect() then
         local res = db:query(sql)
         if next(res) then
             return res
@@ -56,10 +56,22 @@ function postgres:query(sql)
     end
 end
 
-function postgres:disconnect()
+function _M:begin()
+    _M:query("begin")
+end
+
+function _M:commit()
+    _M:query("commit")
+end
+
+function _M:rollback()
+    _M:query("rollback")
+end
+
+function _M:disconnect()
     local db = self.db
     db:disconnect()
 end
 
 
-return postgres
+return _M

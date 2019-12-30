@@ -32,4 +32,16 @@ function _M:query(sql)
     end
 end
 
+function _M:begin()
+    _M:query("begin")
+end
+
+function _M:commit()
+    _M:query("commit")
+end
+
+function _M:rollback()
+    _M:query("rollback")
+end
+
 return _M

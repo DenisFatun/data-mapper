@@ -10,8 +10,14 @@ local schema = {
 
 }
 
-setmetatable(schema, self)
-schema.__index = self
+function schema:new(obj)
+    obj = obj or {}
+
+    setmetatable(schema, self)
+    schema.__index = self
+
+    return obj
+end
 
 function schema:search(table)
     if type(table) == 'string' then
