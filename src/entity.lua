@@ -118,11 +118,12 @@ end
 
 function entity:get_by_field(field, value)
     local fields = {}
-    fields[field]= value
+    fields[field]=value
     return self:get(fields)
 end
 
 function entity:get_by_pk(value)
+    if not value then return nil end
     local list = self:get_by_field(self.pk, value)
     if next(list) then
         return list[1]
@@ -140,7 +141,7 @@ end
 function entity:update(fields, filter_values)
     local query = self.relation:update(fields):where(filter_values):build_sql()
     local res = self.db:query(query)
-    if next(res) then
+    if res and next(res) then
         return self:get_by_pk(res[1][self.pk])
     end
 end
